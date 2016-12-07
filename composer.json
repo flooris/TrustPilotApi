@@ -1,0 +1,19 @@
+{
+    "name": "flooris/trustpilot-api",
+    "description": "Api for sending Trustpilot Invites",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tom Kuijer",
+            "email": "tom@flooris.nl"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Flooris\\Trustpilot\\": "src/"
+        }
+    }
+}
