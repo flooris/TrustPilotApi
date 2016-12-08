@@ -1,79 +1,76 @@
 <?php
 
-
 namespace Flooris\Trustpilot;
 
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\RequestOptions;
 
 class TrustpilotApi
 {
-    /** @var string AUTH token */
-    private $access_token;
+
+    const API_URI = 'https://api.trustpilot.com/v1/';
+    const OAUTH_TOKEN_ENDPOINT = 'oauth/oauth-business-users-for-applications/accesstoken';
 
     private $api_key;
     private $api_secret;
     private $api_username;
     private $api_password;
 
+    /** @var GuzzleClient $client */
+    protected $client;
+
     /**
      * TrustpilotApi constructor.
      *
-     * @param $api_key
-     * @param $api_secret
-     * @param $api_username
-     * @param $api_password
+     * @param string $api_key               Trustpilot public API key
+     * @param string $api_secret            Trustpilot private API secret
+     * @param string $api_username          Trustpilot business username
+     * @param string $api_password          Trustpilot business password
+     * @param array  $extra_client_options  (optional) Extra options passed into the guzzle client instance
      */
-    public function __construct($api_key, $api_secret, $api_username, $api_password)
+    public function __construct($api_key, $api_secret, $api_username, $api_password, $extra_client_options = [])
     {
         $this->api_key = $api_key;
         $this->api_secret = $api_secret;
         $this->api_username = $api_username;
         $this->api_password = $api_password;
-    }
 
-    private function addAuthToken($url, $apikey)
-    {
-        if( ! $apikey) {
-            if( ! $this->access_token) {
-                $this->access_token = $this->getAccessToken();
-            }
+        // Configure guzzle client
+        $default_options = [
+            'base_uri' => self::API_URI,
+            RequestOptions::DEBUG => true
+        ];
 
-            $endpoint = $url . "?token=". $this->access_token;
-        } else {
-            $endpoint = $url . "?apikey=". $this->api_key;
-        }
+        $client_options = array_merge($default_options, $extra_client_options);
 
-        return $endpoint;
+        $this->client = new GuzzleClient($client_options);
     }
 
     /**
      * Do post on trustpilot API
      *
-     * @param $url string The url
+     * @param $endpoint
      * @param $payload string JSON payload
      * @return string
      */
-    public function doPost($url, $payload, $apikey = false)
+    public function post($endpoint, $payload)
     {
-        $endpoint = $this->addAuthToken($url, $apikey);
+        // Execute a POST request
+        $response = $this->client->post($endpoint, [
+            RequestOptions::HEADERS => [
+                'apikey' => $this->getAccessToken()
+            ],
+            RequestOptions::JSON => $payload
+        ]);
 
-        $process = curl_init($endpoint);
-        curl_setopt($process, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-        ));
+        // Validate response
+        if( 200 == $response->getStatusCode() ) {
+            $json = json_decode($response->getBody());
 
-        curl_setopt($process, CURLOPT_TIMEOUT, 30);
-        curl_setopt($process, CURLOPT_POST, 1);
-        curl_setopt($process, CURLOPT_FRESH_CONNECT, true);
-        curl_setopt($process, CURLOPT_POSTFIELDS, $payload);
-        curl_setopt($process, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($process, CURLOPT_SSL_VERIFYPEER, false);
-        $return = curl_exec($process);
-        if ($return == null)
-            return null;
-
-        $retJson = json_decode($return);
-
-        return $retJson;
+            return $json;
+        } else {
+            throw new \LogicException('Invalid response, expected 200, got: ' . $response->getStatusCode());
+        }
     }
 
     /**
@@ -82,84 +79,61 @@ class TrustpilotApi
      * @param $url string The url
      * @return string
      */
-    public function doGet($url, $apikey = false)
+    public function get($endpoint)
     {
-        $endpoint = $this->addAuthToken($url, $apikey);
+        // Execute a GET request
+        $response = $this->client->get($endpoint, [
+            RequestOptions::HEADERS => [
+                'apikey' => $this->getAccessToken()
+            ]
+        ]);
 
-        $process = curl_init($endpoint);
-        curl_setopt($process, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-        ));
+        // Validate response
+        if( 200 == $response->getStatusCode() ) {
+            $json = json_decode($response->getBody());
 
-        curl_setopt($process, CURLOPT_TIMEOUT, 30);
-        curl_setopt($process, CURLOPT_FRESH_CONNECT, true);
-        curl_setopt($process, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($process, CURLOPT_SSL_VERIFYPEER, false);
-        $return = curl_exec($process);
-        if ($return == null)
-            return false;
-
-        return json_decode($return);
+            return $json;
+        } else {
+            throw new \LogicException('Invalid response, expected 200, got: ' . $response->getStatusCode());
+        }
     }
 
     /**
      * Get access token
      *
-     * @param bool $first
      * @return string
      * @throws \Exception
      */
-    private function getAccessToken($first = true)
+    protected function getAccessToken()
     {
-        $endpoint   = "https://api.trustpilot.com/v1/oauth/oauth-business-users-for-applications/accesstoken";
-
-        $process = curl_init($endpoint);
-        curl_setopt($process, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/x-www-form-urlencoded',
-            "Authorization: Basic " . base64_encode($this->api_key . ":" . $this->api_secret),
-        ));
-        curl_setopt($process, CURLOPT_HEADER, 0);
-        curl_setopt($process, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
-        curl_setopt($process, CURLOPT_TIMEOUT, 5);
-        curl_setopt($process, CURLOPT_POST, 1);
-        curl_setopt($process, CURLOPT_FRESH_CONNECT, true);
-
-        $postfields = http_build_query([
-            'grant_type' => 'password',
-            'username' => $this->api_username,
-            'password' => $this->api_password
+        // Make a post request to retrieve an access token
+        $response = $this->client->post(self::OAUTH_TOKEN_ENDPOINT, [
+            RequestOptions::FORM_PARAMS => [
+                'grant_type' => 'password',
+                'username' => $this->api_username,
+                'password' => $this->api_password
+            ],
+            RequestOptions::AUTH => [
+                $this->api_key,
+                $this->api_secret
+            ],
+            RequestOptions::HEADERS => [
+                'Accept' => 'application/json'
+            ],
+            RequestOptions::HTTP_ERRORS => false
         ]);
 
-        curl_setopt($process, CURLOPT_POSTFIELDS, $postfields);
-        curl_setopt($process, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($process, CURLOPT_SSL_VERIFYPEER, false);
-        $return = curl_exec($process);
-        if ($return == null) {
-            if($first) {
-                return $this->getAccessToken(false);
-            } else {
-                throw new \Exception("Access token NULL" . PHP_EOL .
-                    "Data:" . PHP_EOL .
-                    "Authorization: Basic " . base64_encode($this->api_key . ":" . $this->api_secret) . PHP_EOL .
-                    "Post fields: " . $postfields
-                );
+        // Validate response
+        if( 200 == $response->getStatusCode() ) {
+            $json = json_decode($response->getBody());
+
+            if( ! isset($json->access_token) or ! $json->access_token) {
+                throw new \LogicException('Invalid json response, no access token found.');
             }
+
+            return $json->access_token;
+        } else {
+            throw new \LogicException('Invalid response, expected 200, got: ' . $response->getStatusCode());
         }
-
-        curl_close($process);
-
-        $json = json_decode($return);
-
-        $access_token = $json->access_token;
-
-        if ( ! $access_token ) {
-            throw new \Exception("Access token NULL" . PHP_EOL .
-                "Data:" . PHP_EOL .
-                "Authorization: Basic " . base64_encode($this->api_key . ":" . $this->api_secret) . PHP_EOL .
-                "Post fields: " . $postfields
-            );
-        }
-
-        return $access_token;
     }
 }
