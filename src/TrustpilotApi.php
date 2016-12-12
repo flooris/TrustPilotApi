@@ -139,8 +139,6 @@ class TrustpilotApi
                 throw new \LogicException('Invalid json response, no access token found.');
             }
 
-            dump($json);
-
             return $json->access_token;
         } else {
             throw new \LogicException('Invalid response, expected 200, got: ' . $response->getStatusCode());
