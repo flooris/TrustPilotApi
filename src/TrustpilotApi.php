@@ -76,17 +76,25 @@ class TrustpilotApi
     /**
      * Do get on trustpilot API
      *
-     * @param $url string The url
+     * @param $endpoint string The url
+     * @param $public bool Use public authentication method
      * @return string
      */
-    public function get($endpoint)
+    public function get($endpoint, $public = true)
     {
+        $options = [
+            RequestOptions::HEADERS => []
+        ];
+
+        if ( ! $public ) {
+            $token = $this->getAccessToken();
+            $options[RequestOptions::HEADERS]['Authorization'] = "Bearer {$token}";
+        } else {
+            $options[RequestOptions::HEADERS]['apikey'] = $this->api_key;
+        }
+
         // Execute a GET request
-        $response = $this->client->get($endpoint, [
-            RequestOptions::HEADERS => [
-                'apikey' => $this->getAccessToken()
-            ]
-        ]);
+        $response = $this->client->get($endpoint, $options);
 
         // Validate response
         if( 200 == $response->getStatusCode() ) {
@@ -130,6 +138,8 @@ class TrustpilotApi
             if( ! isset($json->access_token) or ! $json->access_token) {
                 throw new \LogicException('Invalid json response, no access token found.');
             }
+
+            dump($json);
 
             return $json->access_token;
         } else {

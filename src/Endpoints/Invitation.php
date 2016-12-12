@@ -89,7 +89,7 @@ class Invitation
      */
     public function getInvitationTemplates()
     {
-        $response = $this->client->get($this->getInvitationEndpoint('/templates'));
+        $response = $this->client->get($this->getInvitationEndpoint('/templates'), false);
 
         $response = new GetInvitationTemplatesResponse($response);
 
