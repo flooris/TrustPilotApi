@@ -44,9 +44,9 @@ class CreateInvitationResponse
         $this->sender_email = $source->sender->email;
         $this->sender_name = $source->sender->name;
         $this->reply_to = $source->replyTo;
-        $this->created_time = Carbon::createFromFormat(DATE_ISO8601, $source->createdTime);
-        $this->preferred_send_time = Carbon::createFromFormat(DATE_ISO8601, $source->preferredSendTime);
-        $this->sent_time = Carbon::createFromFormat(DATE_ISO8601, $source->sentTime);
+        $this->created_time = Carbon::createFromTimestamp(strtotime($source->createdTime));
+        $this->preferred_send_time = Carbon::createFromTimestamp(strtotime($source->preferredSendTime));
+        $this->sent_time = Carbon::createFromTimestamp(strtotime($source->sentTime));
         $this->tags = $source->tags;
         $this->redirect_uri = $source->redirectUri;
         $this->status = $source->status;

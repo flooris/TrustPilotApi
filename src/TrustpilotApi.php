@@ -60,6 +60,7 @@ class TrustpilotApi
             RequestOptions::HEADERS => [
                 'Authorization' => "Bearer {$token}"
             ],
+            RequestOptions::HTTP_ERRORS => false,
             RequestOptions::JSON => $payload
         ]);
 

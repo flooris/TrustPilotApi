@@ -73,7 +73,7 @@ class Invitation
             'redirectUri' => $redirect
         ];
 
-        $response = $this->client->post($this->getInvitationEndpoint('/invitations'), json_encode($request));
+        $response = $this->client->post($this->getInvitationEndpoint('/invitations'), $request);
 
         $response = new CreateInvitationResponse($response);
 
