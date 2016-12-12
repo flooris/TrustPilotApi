@@ -38,7 +38,6 @@ class TrustpilotApi
         // Configure guzzle client
         $default_options = [
             'base_uri' => self::API_URI,
-            RequestOptions::DEBUG => true
         ];
 
         $client_options = array_merge($default_options, $extra_client_options);
