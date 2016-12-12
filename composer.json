@@ -11,11 +11,15 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "guzzlehttp/guzzle": "^6.2"
+        "guzzlehttp/guzzle": "^6.2",
+        "nesbot/carbon": "^1.21"
     },
     "autoload": {
         "psr-4": {
             "Flooris\\Trustpilot\\": "src/"
         }
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^3.2"
     }
 }
