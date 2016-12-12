@@ -55,9 +55,10 @@ class TrustpilotApi
     public function post($endpoint, $payload)
     {
         // Execute a POST request
+        $token = $this->getAccessToken();
         $response = $this->client->post($endpoint, [
             RequestOptions::HEADERS => [
-                'apikey' => $this->getAccessToken()
+                'Authorization' => "Bearer {$token}"
             ],
             RequestOptions::JSON => $payload
         ]);
