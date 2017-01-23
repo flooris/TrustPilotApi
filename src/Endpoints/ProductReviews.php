@@ -35,7 +35,6 @@ class ProductReviews
      * @param $locale
      * @param $redirect_uri
      * @param InvitationProduct[] $products
-     * @param int[] $product_ids
      * @return CreateProductInvitationResponse|string
      */
     public function createProductReviewInvitationLink(
@@ -43,8 +42,7 @@ class ProductReviews
         $reference_id,
         $locale,
         $redirect_uri,
-        $products,
-        $product_ids = array()
+        $products
     )
     {
         $request = [
@@ -56,7 +54,6 @@ class ProductReviews
             'locale' => $locale,
             'redirectUri' => $redirect_uri,
             'products' => [],
-            'productIds' => $product_ids
         ];
 
         foreach($products as $product) {

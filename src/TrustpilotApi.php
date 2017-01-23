@@ -2,8 +2,8 @@
 
 namespace Flooris\Trustpilot;
 
-use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\RequestOptions;
+use GuzzleHttp\Client as GuzzleClient;
 
 class TrustpilotApi
 {
