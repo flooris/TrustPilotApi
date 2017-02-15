@@ -5,12 +5,15 @@ namespace Flooris\Trustpilot\Endpoints;
 use Flooris\Trustpilot\TrustpilotApi;
 use Flooris\Trustpilot\InvitationProduct;
 use Flooris\Trustpilot\InvitationConsumer;
+use Flooris\Trustpilot\Responses\GetProductReviewsResponse;
 use Flooris\Trustpilot\Responses\CreateProductInvitationResponse;
+use Flooris\Trustpilot\Responses\GetProductReviewSummariesResponse;
 
 class ProductReviews
 {
 
-    const API_INVITATIONS_ENDPOINT = 'https://api.trustpilot.com/v1/private/product-reviews/business-units/';
+    const API_INVITATIONS_ENDPOINT_PUBLIC = 'https://api.trustpilot.com/v1/product-reviews/business-units/';
+    const API_INVITATIONS_ENDPOINT_PRIVATE = 'https://api.trustpilot.com/v1/private/product-reviews/business-units/';
 
     /** @var TrustpilotApi $client */
     private $client;
@@ -22,9 +25,11 @@ class ProductReviews
         $this->business_unit_id = $business_unit_id;
     }
 
-    protected function getInvitationEndpoint($endpoint)
+    protected function getInvitationEndpoint($endpoint, $public = false)
     {
-        return sprintf('%s%s%s', self::API_INVITATIONS_ENDPOINT, $this->business_unit_id, $endpoint);
+        $base = $public ? self::API_INVITATIONS_ENDPOINT_PUBLIC : self::API_INVITATIONS_ENDPOINT_PRIVATE;
+
+        return sprintf('%s%s%s', $base, $this->business_unit_id, $endpoint);
     }
 
     /**
@@ -71,6 +76,74 @@ class ProductReviews
         $response = $this->client->post($this->getInvitationEndpoint('/invitation-links'), $request);
 
         $response = new CreateProductInvitationResponse($response);
+
+        return $response;
+    }
+
+    /**
+     * Get a list of summaries of product reviews for a business unit.
+     * The summary contains information about stars average, distribution and count.
+     * Pagination is used to retrieve all results.
+     *
+     * @param int $page [optional] Default 1 <p>
+     * The page to retrieve. If the page number requested is higher than the available number of pages an empty array will be returned.
+     * Constraints: The allowed range is minimum: 1, maximum: 2147483647
+     * </p>
+     * @param int $per_page [optional] Default 1000 <p>
+     * The number of summaries to retrieve per page.
+     * Constraints: The allowed range is minimum: 1, maximum: 1000
+     * </p>
+     * @return GetProductReviewSummariesResponse
+     */
+    public function getProductReviewsSummariesList($page = 1, $per_page = 1000)
+    {
+        $parameters = http_build_query([
+            'page' => (int)$page,
+            'perPage' => (int)$per_page,
+        ]);
+
+        $endpoint = $this->getInvitationEndpoint('/summaries?') . $parameters;
+
+        $response = $this->client->get($endpoint, false);
+
+        $response = new GetProductReviewSummariesResponse($response);
+
+        return $response;
+    }
+
+    /**
+     * Get reviews for specified SKU
+     *
+     * @param $sku
+     * @param string $language [optional]
+     * @param int $page [optional] Default 1 <p>
+     * The page to retrieve. If the page number requested is higher than the available number of pages an empty array will be returned.
+     * Constraints: The allowed range is minimum: 1, maximum: 2147483647
+     * </p>
+     * @param int $per_page [optional] Default 20 <p>
+     * The number of reviews to retrieve per page.
+     * Constraints: The allowed range is minimum: 1, maximum: 100
+     * </p>
+     * @return GetProductReviewsResponse|string
+     */
+    public function getProductReviews($sku, $language = null, $page = 1, $per_page = 20)
+    {
+        $parameters = [
+            'sku' => $sku,
+            'page' => (int)$page,
+            'perPage' => (int)$per_page,
+        ];
+        if( $language ) {
+            $parameters['language'] = $language;
+        }
+
+        $parameters = http_build_query($parameters);
+
+        $endpoint = $this->getInvitationEndpoint('/reviews?', true) . $parameters;
+
+        $response = $this->client->get($endpoint);
+
+        $response = new GetProductReviewsResponse($response);
 
         return $response;
     }
