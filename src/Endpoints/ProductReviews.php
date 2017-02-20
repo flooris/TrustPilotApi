@@ -7,6 +7,7 @@ use Flooris\Trustpilot\InvitationProduct;
 use Flooris\Trustpilot\InvitationConsumer;
 use Flooris\Trustpilot\Responses\GetProductReviewsResponse;
 use Flooris\Trustpilot\Responses\CreateProductInvitationResponse;
+use Flooris\Trustpilot\Responses\GetPrivateProductReviewsResponse;
 use Flooris\Trustpilot\Responses\GetProductReviewSummariesResponse;
 
 class ProductReviews
@@ -144,6 +145,69 @@ class ProductReviews
         $response = $this->client->get($endpoint);
 
         $response = new GetProductReviewsResponse($response);
+
+        return $response;
+    }
+
+    /**
+     * Get private product reviews
+     *
+     * Given a list of SKUs return a list of product reviews.
+     * This method includes private information such as consumer e-mail and reference id.
+     * By default only published reviews are returned.
+     * To get reviews with other states, provide a list in the state field.
+     * Pagination is used to retrieve all results.
+     *
+     * @param null|string|array $sku [optional] Default null <p>
+     * Filter reviews by product Stock-Keeping Unit (SKU) identifier
+     * Default returns reviews for all SKUs
+     * </p>
+     * @param null|string $language [optional] Default null <p>
+     * Filter reviews by Language.
+     * Defaults to returning all languages
+     * </p>
+     * @param string $state [optional] Default published <p>
+     * Which reviews to retrieve according to their review state. Default is Published.
+     * Constraints: Allowed values are published, unpublished, underModeration, archived
+     *
+     * Example: published,unpublished
+     * </p>
+     * @param int $page [optional] Default 1 <p>
+     * The page to retrieve. If the page number requested is higher than the available number of pages an empty array will be returned.
+     * Constraints: The allowed range is minimum: 1, maximum: 2147483647
+     * </p>
+     * @param int $per_page [optional] Default 20 <p>
+     * The number of reviews to retrieve per page.
+     * Constraints: The allowed range is minimum: 1, maximum: 100
+     * </p>
+     * @return GetPrivateProductReviewsResponse|string
+     */
+    public function getPrivateProductReviews($sku = null, $language = null, $state = 'published', $page = 1, $per_page = 20)
+    {
+        $parameters = [
+            'state' => $state,
+            'page' => $page,
+            'perPage' => $per_page
+        ];
+
+        if( $language ) {
+            $parameters['language'] = $language;
+        }
+
+        if( $sku ) {
+            if( is_array($sku) ) {
+                $sku = implode(',', $sku);
+            }
+            $parameters['sku'] = $sku;
+        }
+
+        $parameters = http_build_query($parameters);
+
+        $endpoint = $this->getInvitationEndpoint('/reviews?') . $parameters;
+
+        $response = $this->client->get($endpoint, false);
+
+        $response = new GetPrivateProductReviewsResponse($response);
 
         return $response;
     }
