@@ -2,6 +2,7 @@
 
 namespace Flooris\Trustpilot;
 
+use Carbon\Carbon;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Client as GuzzleClient;
 
@@ -15,6 +16,8 @@ class TrustpilotApi
     private $api_secret;
     private $api_username;
     private $api_password;
+    private $access_token;
+    private $access_token_expires_on;
 
     /** @var GuzzleClient $client */
     protected $client;
@@ -115,6 +118,10 @@ class TrustpilotApi
      */
     protected function getAccessToken()
     {
+        if (! $this->accessTokenHasExpired()) {
+            return $this->access_token;
+        }
+
         // Make a post request to retrieve an access token
         $response = $this->client->post(self::OAUTH_TOKEN_ENDPOINT, [
             RequestOptions::FORM_PARAMS => [
@@ -140,9 +147,22 @@ class TrustpilotApi
                 throw new \LogicException('Invalid json response, no access token found.');
             }
 
+            $this->access_token = $json->access_token;
+            $this->access_token_expires_on = (int)$json->refresh_token_issued_at + (int)$json->expires_in;
+
             return $json->access_token;
         } else {
             throw new \LogicException('Invalid response, expected 200, got: ' . $response->getStatusCode());
         }
+    }
+
+    /**
+     * Check if the access token has expired
+     *
+     * @return boolean
+     */
+    private function accessTokenHasExpired()
+    {
+        return microtime() > $this->access_token_expires_on;
     }
 }
