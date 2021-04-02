@@ -38,11 +38,8 @@ class GetPrivateProductReviewsResponse
                 'conversion_id' => $product_review->conversationId,
             ];
 
-            if ($product_review->attachments) {
-                $review->attachments = $this->getAttachments($product_review);
-            } else {
-                $review->attachments = [];
-            }
+            $review->attachments = $this->getAttachments($product_review);
+            $review->attribute_ratings = $this->getAttributeRatings($product_review);
 
             $this->reviews[] = $review;
         }
@@ -55,6 +52,7 @@ class GetPrivateProductReviewsResponse
         foreach ($product_review->attachments as $review_attachment) {
             $attachment = (object)[
                 'state' => $review_attachment->state,
+                'id' => $review_attachment->id,
             ];
 
 
@@ -72,5 +70,23 @@ class GetPrivateProductReviewsResponse
         }
 
         return $attachments;
+    }
+
+    public function getAttributeRatings($product_review)
+    {
+        $attribute_ratings = [];
+
+        foreach ($product_review->attributeRatings as $attribute_rating) {
+            $rating = (object)[
+                'attribute_id' => $attribute_rating->attributeId,
+                'attribute_name' => $attribute_rating->attributeName,
+                'rating' => $attribute_rating->rating,
+            ];
+
+
+            $attribute_ratings[] = $rating;
+        }
+
+        return $attribute_ratings;
     }
 }
