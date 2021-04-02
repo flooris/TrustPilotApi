@@ -38,7 +38,7 @@ class GetPrivateProductReviewsResponse
                 'conversion_id' => $product_review->conversationId,
             ];
 
-            $review->attachments = $this->getAttachments($product_review);
+            $review->attachments       = $this->getAttachments($product_review);
             $review->attribute_ratings = $this->getAttributeRatings($product_review);
 
             $this->reviews[] = $review;
@@ -52,7 +52,7 @@ class GetPrivateProductReviewsResponse
         foreach ($product_review->attachments as $review_attachment) {
             $attachment = (object)[
                 'state' => $review_attachment->state,
-                'id' => $review_attachment->id,
+                'id'    => $review_attachment->id,
             ];
 
 
@@ -78,9 +78,9 @@ class GetPrivateProductReviewsResponse
 
         foreach ($product_review->attributeRatings as $attribute_rating) {
             $rating = (object)[
-                'attribute_id' => $attribute_rating->attributeId,
+                'attribute_id'   => $attribute_rating->attributeId,
                 'attribute_name' => $attribute_rating->attributeName,
-                'rating' => $attribute_rating->rating,
+                'rating'         => $attribute_rating->rating,
             ];
 
 
