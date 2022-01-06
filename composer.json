@@ -12,7 +12,8 @@
     "minimum-stability": "stable",
     "require": {
         "guzzlehttp/guzzle": "^6.2",
-        "nesbot/carbon": "^2.55.2"
+        "nesbot/carbon": "2.50.0",
+        "symfony/translation": "v4.4.26"
     },
     "autoload": {
         "psr-4": {
